@@ -4,6 +4,7 @@
     by IDS Imaging Development Systems GMBH.
   </description>
   <author>Anqi Xu</author>
+  <email>anqixu@cim.mcgill.ca</email>
   <license>BSD</license>
   <url>http://ros.org/wiki/ueye_cam</url>
   <export>
