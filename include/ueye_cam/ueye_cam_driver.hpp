@@ -277,6 +277,15 @@ public:
   INT setFlashParams(INT& delay_us, UINT& duration_us);
 
   /**
+   * Updates the state ofOpenMP (Open Multi-Processing) is a programming interface
+   * that supports distributed computing on multi-core processors.
+   *
+   * Note in modern linux systems the implementation of openMP uses a large percentage
+   * of the CPU causing the driver to freeze. It is recommended to leave this disabled
+   */
+  INT setOpenMultiProcessing(bool& open_mp_state);
+  
+  /**
    * Sets current camera to start capturing frames to internal buffer repeatedly.
    * This function also pre-configures the camera to operate in free-run,
    * non-triggered mode, and further attempts to enable the digital output pin

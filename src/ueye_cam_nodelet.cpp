@@ -115,6 +115,7 @@ UEyeCamNodelet::UEyeCamNodelet():
   cam_params_.ext_trigger_mode = false;
   cam_params_.flash_delay = 0;
   cam_params_.flash_duration = DEFAULT_FLASH_DURATION;
+  cam_params_.open_multi_processing = false;
   cam_params_.flip_upd = false;
   cam_params_.flip_lr = false;
 }
@@ -152,7 +153,7 @@ void UEyeCamNodelet::onInit() {
     cam_id_ = ANY_CAMERA;
   }
 
-  loadIntrinsicsFile();
+  loadIntrinsicsFile(); //Load physical calibration file as described in ROS camera_calibration
 
   // Setup dynamic reconfigure server
   ros_cfg_ = new ReconfigureServer(ros_cfg_mutex_, local_nh);
@@ -202,6 +203,7 @@ void UEyeCamNodelet::onInit() {
       "Frame Rate (Hz):\t" << cam_params_.frame_rate << endl <<
       "Output Rate (Hz):\t" << cam_params_.output_rate << endl <<
       "Pixel Clock (MHz):\t" << cam_params_.pixel_clock << endl <<
+      "OpenMP:\t" << cam_params_.open_multi_processing << endl <<
       "Mirror Image Upside Down:\t" << cam_params_.flip_upd << endl <<
       "Mirror Image Left Right:\t" << cam_params_.flip_lr << endl
       );
@@ -467,6 +469,12 @@ INT UEyeCamNodelet::parseROSParams(ros::NodeHandle& local_nh) {
       }
     }
   }
+  if (local_nh.hasParam("open_multi_processing")) {
+    local_nh.getParam("open_multi_processing", cam_params_.open_multi_processing);
+    if (cam_params_.open_multi_processing != prevCamParams.open_multi_processing) {
+      hasNewParams = true;
+    }
+  }
   if (local_nh.hasParam("flip_upd")) {
     local_nh.getParam("flip_upd", cam_params_.flip_upd);
     if (cam_params_.flip_upd != prevCamParams.flip_upd) {
@@ -516,7 +524,8 @@ INT UEyeCamNodelet::parseROSParams(ros::NodeHandle& local_nh) {
     if ((is_err = setExposure(cam_params_.auto_exposure, cam_params_.exposure)) != IS_SUCCESS) noop;
     if ((is_err = setWhiteBalance(cam_params_.auto_white_balance, cam_params_.white_balance_red_offset,
       cam_params_.white_balance_blue_offset)) != IS_SUCCESS) noop;
-    if ((is_err = setMirrorUpsideDown(cam_params_.flip_upd)) != IS_SUCCESS) noop;
+    if ((is_err = setOpenMultiProcessing(cam_params_.open_multi_processing)) != IS_SUCCESS) noop;
+    if ((is_err = setMirrorLeftRight(cam_params_.flip_lr)) != IS_SUCCESS) noop;
     if ((is_err = setMirrorLeftRight(cam_params_.flip_lr)) != IS_SUCCESS) noop;
     #undef noop
   }
@@ -643,6 +652,10 @@ void UEyeCamNodelet::configCallback(ueye_cam::UEyeCamConfig& config, uint32_t le
       config.white_balance_blue_offset != cam_params_.white_balance_blue_offset) {
     if (setWhiteBalance(config.auto_white_balance, config.white_balance_red_offset,
         config.white_balance_blue_offset) != IS_SUCCESS) return;
+  }
+
+  if (config.open_multi_processing != cam_params_.open_multi_processing) {
+    if (setOpenMultiProcessing(config.open_multi_processing) != IS_SUCCESS) return;
   }
 
   if (config.flip_upd != cam_params_.flip_upd) {
@@ -827,6 +840,14 @@ INT UEyeCamNodelet::queryCamParams() {
     return is_err;
   }
   cam_params_.pixel_clock = currPixelClock;
+
+  UINT nEnabled = 0;
+  if ((is_err = is_Configuration(IS_CONFIG_OPEN_MP_CMD_GET_ENABLE, (void*)&nEnabled,
+      sizeof(nEnabled))) != IS_SUCCESS) {
+    ERROR_STREAM("Failed to query openMP for [" << cam_name_ << "] (" << err2str(is_err) << ")");
+    return is_err;
+  }
+  cam_params_.open_multi_processing = (nEnabled == IS_CONFIG_OPEN_MP_ENABLE);
 
   INT currROP = is_SetRopEffect(cam_handle_, IS_GET_ROP_EFFECT, 0, 0);
   cam_params_.flip_upd = ((currROP & IS_SET_ROP_MIRROR_UPDOWN) == IS_SET_ROP_MIRROR_UPDOWN);

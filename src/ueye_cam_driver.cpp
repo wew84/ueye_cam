@@ -182,7 +182,7 @@ INT UEyeCamDriver::loadCamConfig(string filename, bool ignore_load_failure) {
   // Convert filename to unicode, as requested by UEye API
   const wstring filenameU(filename.begin(), filename.end());
   if ((is_err = is_ParameterSet(cam_handle_, IS_PARAMETERSET_CMD_LOAD_FILE,
-      (void*) filenameU.c_str(), 0)) != IS_SUCCESS) {
+      (void*) filenameU.c_str(), NULL)) != IS_SUCCESS) {
     WARN_STREAM("Could not load [" << cam_name_
       << "]'s sensor parameters file " << filename << " (" << err2str(is_err) << ")");
     if (ignore_load_failure) is_err = IS_SUCCESS;
@@ -782,6 +782,19 @@ INT UEyeCamDriver::setFlashParams(INT& delay_us, UINT& duration_us) {
       (void*) &newFlashParams, sizeof(IO_FLASH_PARAMS))) != IS_SUCCESS) {
     WARN_STREAM("Failed to set flash parameter info for [" << cam_name_ <<
       "] (" << err2str(is_err) << ")");
+    return is_err;
+  }
+
+  return is_err;
+}
+
+
+INT UEyeCamDriver::setOpenMultiProcessing(bool& open_mp_state) {
+  INT is_err = IS_SUCCESS;
+  UINT nEnabled = open_mp_state ? IS_CONFIG_OPEN_MP_ENABLE : IS_CONFIG_OPEN_MP_DISABLE;
+ 
+  if ((is_err = is_Configuration(IS_CONFIG_OPEN_MP_CMD_SET_ENABLE, (void*)&nEnabled, sizeof(nEnabled))) != IS_SUCCESS) {
+    ERROR_STREAM("Failed to enable/disable openMP for [" << cam_name_ << "] (" << err2str(is_err) << ")");
     return is_err;
   }
 
