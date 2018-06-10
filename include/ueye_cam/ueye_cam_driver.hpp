@@ -283,7 +283,7 @@ public:
    * Note in modern linux systems the implementation of openMP uses a large percentage
    * of the CPU causing the driver to freeze. It is recommended to leave this disabled
    */
-  INT setOpenMultiProcessing(bool& open_mp_state);
+  INT setOpenMultiProcessing(bool open_mp_state);
   
   /**
    * Sets current camera to start capturing frames to internal buffer repeatedly.

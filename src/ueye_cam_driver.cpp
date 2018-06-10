@@ -789,7 +789,7 @@ INT UEyeCamDriver::setFlashParams(INT& delay_us, UINT& duration_us) {
 }
 
 
-INT UEyeCamDriver::setOpenMultiProcessing(bool& open_mp_state) {
+INT UEyeCamDriver::setOpenMultiProcessing(bool open_mp_state) {
   INT is_err = IS_SUCCESS;
   UINT nEnabled = open_mp_state ? IS_CONFIG_OPEN_MP_ENABLE : IS_CONFIG_OPEN_MP_DISABLE;
  

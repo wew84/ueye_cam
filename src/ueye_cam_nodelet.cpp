@@ -97,13 +97,13 @@ UEyeCamNodelet::UEyeCamNodelet():
   cam_params_.subsampling = cam_subsampling_rate_;
   cam_params_.binning = cam_binning_rate_;
   cam_params_.sensor_scaling = cam_sensor_scaling_rate_;
-  cam_params_.auto_gain = false;
+  cam_params_.auto_gain = true;
   cam_params_.master_gain = 0;
   cam_params_.red_gain = 0;
   cam_params_.green_gain = 0;
   cam_params_.blue_gain = 0;
   cam_params_.gain_boost = 0;
-  cam_params_.auto_exposure = false;
+  cam_params_.auto_exposure = true;
   cam_params_.exposure = DEFAULT_EXPOSURE;
   cam_params_.auto_white_balance = false;
   cam_params_.white_balance_red_offset = 0;
@@ -156,9 +156,9 @@ void UEyeCamNodelet::onInit() {
   loadIntrinsicsFile(); //Load physical calibration file as described in ROS camera_calibration
 
   // Setup dynamic reconfigure server
-  ros_cfg_ = new ReconfigureServer(ros_cfg_mutex_, local_nh);
-  ReconfigureServer::CallbackType f;
-  f = bind(&UEyeCamNodelet::configCallback, this, _1, _2);
+  // ros_cfg_ = new ReconfigureServer(ros_cfg_mutex_, local_nh);
+  // ReconfigureServer::CallbackType f;
+  // f = bind(&UEyeCamNodelet::configCallback, this, _1, _2);
 
   // Setup publishers, subscribers, and services
   ros_cam_pub_ = it.advertiseCamera(cam_name_ + "/" + cam_topic_, 1);
@@ -173,7 +173,7 @@ void UEyeCamNodelet::onInit() {
     return;
   }
 
-  ros_cfg_->setCallback(f); // this will call configCallback, which will configure the camera's parameters
+  // ros_cfg_->setCallback(f); // this will call configCallback, which will configure the camera's parameters
   startFrameGrabber();
   INFO_STREAM(
       "UEye camera [" << cam_name_ << "] initialized on topic " << ros_cam_pub_.getTopic() << endl <<
@@ -876,8 +876,11 @@ INT UEyeCamNodelet::connectCam() {
   // Query existing configuration parameters from camera
   if ((is_err = queryCamParams()) != IS_SUCCESS) return is_err;
 
+  cam_params_.open_multi_processing = false;
+  if ((is_err = setOpenMultiProcessing(cam_params_.open_multi_processing)) != IS_SUCCESS) return is_err;
+
   // Parse and load ROS camera settings
-  if ((is_err = parseROSParams(getPrivateNodeHandle())) != IS_SUCCESS) return is_err;
+  // if ((is_err = parseROSParams(getPrivateNodeHandle())) != IS_SUCCESS) return is_err;
 
   return IS_SUCCESS;
 }
